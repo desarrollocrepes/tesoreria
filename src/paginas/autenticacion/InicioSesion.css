@@ -1,0 +1,136 @@
+/* Estilos para el login con colores crema suaves */
+
+.contenedor-login {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #6b5544 0%, #8b7355 50%, #6b5544 100%);
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.tarjeta-login {
+  background: #f5f1e8;
+  border-radius: 20px;
+  padding: 50px 60px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 450px;
+  width: 100%;
+  text-align: center;
+}
+
+.titulo-login {
+  color: #8b6f47;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  margin: 0 0 40px 0;
+  text-transform: uppercase;
+}
+
+.formulario-login {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.etiqueta-login {
+  color: #8b6f47;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-align: left;
+  margin-bottom: 8px;
+  display: block;
+  text-transform: uppercase;
+}
+
+.input-login {
+  width: 100%;
+  padding: 15px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #5a5a5a;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.input-login::placeholder {
+  color: #c4b5a0;
+  font-size: 14px;
+}
+
+.input-login:focus {
+  background: #fff;
+  box-shadow: 0 0 0 2px #d4c4a8;
+}
+
+.input-login:disabled {
+  background: #ede8df;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.boton-login {
+  width: 100%;
+  padding: 15px 20px;
+  background: #6b5544;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.boton-login:hover:not(:disabled) {
+  background: #5a4636;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(107, 85, 68, 0.3);
+}
+
+.boton-login:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.boton-login:disabled {
+  background: #a89784;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.mensaje-error {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px 15px;
+  border-radius: 8px;
+  font-size: 14px;
+  border: 1px solid #f5c6cb;
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .tarjeta-login {
+    padding: 40px 30px;
+  }
+  
+  .titulo-login {
+    font-size: 16px;
+  }
+}
