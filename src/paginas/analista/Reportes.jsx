@@ -122,39 +122,6 @@ const Reportes = () => {
           </div>
         </section>
 
-        {/* Resumen del Día */}
-        <section className="seccion-resumen">
-          <h2 className="titulo-seccion">RESUMEN DEL DÍA</h2>
-          <div className="tarjetas-resumen">
-            <div className="tarjeta-resumen">
-              <div className="label-metrica">VENTAS TOTALES</div>
-              <div className="valor-metrica">{formatearMoneda(resumenDia.ventasTotales)}</div>
-              <div className="cambio-positivo">
-                ↑ +{resumenDia.ventasPorcentaje}% vs ayer
-              </div>
-            </div>
-
-            <div className="tarjeta-resumen">
-              <div className="label-metrica">CIERRES DE CAJA</div>
-              <div className="valor-metrica">
-                {resumenDia.cierresRealizados} / {resumenDia.cierresTotales}
-              </div>
-              <div className="info-secundaria">
-                {resumenDia.cierresPendientes} pendientes
-              </div>
-            </div>
-
-            <div className="tarjeta-resumen">
-              <div className="label-metrica">DIFERENCIA CAJA</div>
-              <div className="valor-metrica negativo">
-                {formatearMoneda(resumenDia.diferenciaCaja)}
-              </div>
-              <div className="cambio-negativo">
-                ↓ Revisar turno {resumenDia.turnoRevisar}
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* Módulos */}
         <section className="seccion-modulos">
