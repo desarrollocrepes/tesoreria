@@ -1,57 +1,62 @@
 import axios from 'axios';
 
-// Servicios de autenticación
 export const serviciosAutenticacion = {
-  // Validar analista por documento
+
   validarAnalista: async (documento) => {
     try {
-      const respuesta = await axios.get('https://macfer.crepesywaffles.com/api/distribucion-analistas');
+      const respuesta = await axios.get(`https://apialohav2.crepesywaffles.com/buk/tesoreria/${documento}`);
       
-      console.log('Respuesta de la API:', respuesta.data);
-      console.log('Buscando documento:', documento);
+      console.log('Respuesta API Analista:', respuesta.data);
       
-      // La API retorna { data: [...], meta: {...} }
-      const analistas = respuesta.data.data;
-      
-      // Buscar el documento en la lista de analistas
-      // El documento está en attributes.document
-      const analistaEncontrado = analistas.find(a => {
-        const docApi = String(a.attributes.document);
-        const docIngresado = String(documento).trim();
-        console.log('Comparando:', docApi, 'con', docIngresado);
-        return docApi === docIngresado;
-      });
-      
-      if (analistaEncontrado) {
-        const datosUsuario = {
-          documento: documento,
-          rol: 'analista',
-          nombre: analistaEncontrado.attributes.Analista,
-          admin: analistaEncontrado.attributes.admin,
-          basic: analistaEncontrado.attributes.basic,
-          id: analistaEncontrado.id,
-          datosCompletos: analistaEncontrado
-        };
+      if (respuesta.data.ok && respuesta.data.data) {
+        const datos = respuesta.data.data;
         
-        // Guardar información del analista
-        localStorage.setItem('usuario', JSON.stringify(datosUsuario));
+        // Validar que el cargo_area sea ANALISTA VENTAS
+        const esAnalista = datos.cargo_area && 
+                          datos.cargo_area.toUpperCase().includes('ANALISTA VENTAS');
         
-        console.log('Analista encontrado:', datosUsuario);
-        
-        return { 
-          exito: true, 
-          usuario: datosUsuario,
-          rol: 'analista'
-        };
+        if (esAnalista) {
+          const datosUsuario = {
+            documento: datos.document_number,
+            rol: 'analista',
+            nombre: datos.nombre,
+            codigo: datos.codigo,
+            cargoArea: datos.cargo_area,
+            cargoGeneral: datos.cargo_general,
+            areaName: datos.area_nombre,
+            foto: datos.foto,
+            datosCompletos: datos
+          };
+          
+          console.log('Analista encontrado:', datosUsuario);
+          
+          return { 
+            exito: true, 
+            usuario: datosUsuario,
+            rol: 'analista'
+          };
+        } else {
+          console.log('No cumple requisitos de analista');
+          return {
+            exito: false,
+            mensaje: 'El usuario no tiene permisos de analista'
+          };
+        }
       } else {
-        console.log('Documento no encontrado');
-        return { 
-          exito: false, 
-          mensaje: 'Documento no encontrado en el sistema de analistas' 
+        return {
+          exito: false,
+          mensaje: 'Documento no encontrado en el sistema'
         };
       }
     } catch (error) {
       console.error('Error al validar analista:', error);
+      // Si es error 404, el documento no existe
+      if (error.response && error.response.status === 404) {
+        return {
+          exito: false,
+          mensaje: 'Documento no encontrado en el sistema'
+        };
+      }
       throw { 
         exito: false, 
         mensaje: 'Error al conectar con el servidor. Intente nuevamente.' 
@@ -110,6 +115,69 @@ export const serviciosAutenticacion = {
       throw {
         exito: false,
         mensaje: 'Error al cargar los puntos de venta'
+      };
+    }
+  },
+
+ 
+  validarCajera: async (documento) => {
+    try {
+      const respuesta = await axios.get(`https://apialohav2.crepesywaffles.com/buk/tesoreria/${documento}`);
+      
+      console.log('Respuesta API Cajera:', respuesta.data);
+      
+      if (respuesta.data.ok && respuesta.data.data) {
+        const datos = respuesta.data.data;
+        
+        // Validar que el cargo_area sea AUXILIAR DE RESTAURANTE
+        const esCajera = datos.cargo_area && 
+                        datos.cargo_area.toUpperCase().includes('AUXILIAR DE RESTAURANTE');
+        
+        if (esCajera) {
+          const datosUsuario = {
+            documento: datos.document_number,
+            rol: 'cajera',
+            nombre: datos.nombre,
+            codigo: datos.codigo,
+            pdv: datos.area_nombre,
+            cargoArea: datos.cargo_area,
+            cargoGeneral: datos.cargo_general,
+            foto: datos.foto,
+            datosCompletos: datos
+          };
+          
+          console.log('Cajera encontrada:', datosUsuario);
+          
+          return {
+            exito: true,
+            usuario: datosUsuario,
+            rol: 'cajera'
+          };
+        } else {
+          console.log('No cumple requisitos de cajera');
+          return {
+            exito: false,
+            mensaje: 'El usuario no tiene permisos de cajera'
+          };
+        }
+      } else {
+        return {
+          exito: false,
+          mensaje: 'Documento no encontrado en el sistema'
+        };
+      }
+    } catch (error) {
+      console.error('Error al validar cajera:', error);
+      // Si es error 404, el documento no existe
+      if (error.response && error.response.status === 404) {
+        return {
+          exito: false,
+          mensaje: 'Documento no encontrado en el sistema'
+        };
+      }
+      throw {
+        exito: false,
+        mensaje: 'Error al conectar con el servidor. Intente nuevamente.'
       };
     }
   }

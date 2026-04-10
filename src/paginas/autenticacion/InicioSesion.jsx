@@ -26,14 +26,35 @@ const InicioSesion = () => {
     setError('');
 
     try {
-      const resultado = await serviciosAutenticacion.validarAnalista(documento);
+      // Primero intentar como analista
+      let resultado = await serviciosAutenticacion.validarAnalista(documento);
       
       if (resultado.exito) {
+        // Guardar usuario en localStorage
+        localStorage.setItem('usuario', JSON.stringify(resultado.usuario));
+        localStorage.setItem('token', 'authenticated');
+        
         // Redirigir al módulo de analista
         navigate('/analista');
-      } else {
-        setError(resultado.mensaje || 'Documento no encontrado');
+        return;
       }
+      
+      // Si no es analista, intentar como cajera
+      resultado = await serviciosAutenticacion.validarCajera(documento);
+      
+      if (resultado.exito) {
+        // Guardar usuario en localStorage
+        localStorage.setItem('usuario', JSON.stringify(resultado.usuario));
+        localStorage.setItem('token', 'authenticated');
+        
+        // Redirigir al módulo de cajera
+        navigate('/cajera');
+        return;
+      }
+      
+      // Si no es ni analista ni cajera
+      setError('Documento no encontrado o sin permisos de acceso');
+      
     } catch (err) {
       setError(err.mensaje || 'Error al validar el documento. Intenta nuevamente.');
     } finally {
