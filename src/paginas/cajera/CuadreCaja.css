@@ -2,7 +2,7 @@
 
 .modulo-cajera {
   min-height: 100vh;
-  background: #F7F2F0;
+  background: #FDF8F0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   width: 100vw;
   max-width: 100vw;
@@ -306,9 +306,9 @@
 
 .input-cierre:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #AECE82;
   background: white;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(174, 206, 130, 0.15);
 }
 
 .input-cierre::placeholder {
@@ -337,9 +337,9 @@
 
 .textarea-observaciones:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: #AECE82;
   background: white;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(174, 206, 130, 0.15);
 }
 
 .textarea-observaciones::placeholder {

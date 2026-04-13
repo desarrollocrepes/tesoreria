@@ -13,23 +13,87 @@ const fmt = (n) =>
 
 const parse = (s) => parseFloat(String(s).replace(/[^0-9.-]/g, "")) || 0;
 
-const Field = ({ label, qty, val, onQty, onVal, accent }) => (
-  <div className="field-row">
-    <span className="field-label">{label}</span>
-    {qty !== undefined ? (
+const Field = ({ label, qty, val, onQty, onVal, accent }) => {
+  const [editing, setEditing] = useState(false);
+  const [tempValue, setTempValue] = useState("");
+
+  return (
+    <div className="field-row">
+      <span className="field-label">{label}</span>
+      {qty !== undefined ? (
+        <input
+          className={`field-input field-qty ${accent ? "accent" : ""}`}
+          value={qty} 
+          onChange={(e) => onQty?.(e.target.value)}
+        />
+      ) : <div className="field-spacer" />}
       <input
-        className={`field-input field-qty ${accent ? "accent" : ""}`}
-        value={qty} 
-        onChange={(e) => onQty?.(e.target.value)}
+        className={`field-input field-value ${accent ? "accent" : ""}`}
+        value={editing ? tempValue : val}
+        onFocus={(e) => {
+          setEditing(true);
+          setTempValue(String(parse(val)));
+        }}
+        onChange={(e) => {
+          setTempValue(e.target.value);
+        }}
+        onBlur={(e) => {
+          setEditing(false);
+          onVal?.(e.target.value);
+        }}
       />
-    ) : <div className="field-spacer" />}
-    <input
-      className={`field-input field-value ${accent ? "accent" : ""}`}
-      value={val} 
-      onChange={(e) => onVal?.(e.target.value)}
-    />
-  </div>
-);
+    </div>
+  );
+};
+
+const FieldConDiferencia = ({ label, qty, val, valReal, onQty, onVal, accent }) => {
+  const [editing, setEditing] = useState(false);
+  const [tempValue, setTempValue] = useState("");
+  
+  const valorNumerico = typeof val === 'string' ? parse(val) : val;
+  const diferencia = valorNumerico - (valReal || 0);
+  
+  return (
+    <div className="field-row-extended">
+      <span className="field-label">{label}</span>
+      {qty !== undefined ? (
+        <input
+          className={`field-input field-qty-wide ${accent ? "accent" : ""}`}
+          value={qty} 
+          onChange={(e) => onQty?.(e.target.value)}
+          maxLength={2}
+        />
+      ) : <div className="field-spacer" />}
+      <input
+        className={`field-input field-value ${accent ? "accent" : ""}`}
+        value={editing ? tempValue : val}
+        onFocus={(e) => {
+          setEditing(true);
+          setTempValue(String(parse(val)));
+        }}
+        onChange={(e) => {
+          setTempValue(e.target.value);
+        }}
+        onBlur={(e) => {
+          setEditing(false);
+          onVal?.(e.target.value);
+        }}
+      />
+      <input
+        className="field-input field-value-real"
+        value={fmt(valReal || 0)}
+        readOnly
+        title="Valor de facturación"
+      />
+      <input
+        className={`field-input field-diferencia ${diferencia < 0 ? 'diferencia-negativa' : diferencia > 0 ? 'diferencia-positiva' : ''}`}
+        value={fmt(diferencia)}
+        readOnly
+        title="Diferencia: Valor ingresado - Valor real"
+      />
+    </div>
+  );
+};
 
 const SectionCard = ({ icon: Icon, title, color, children }) => (
   <div className="section-card">
@@ -84,6 +148,14 @@ export default function CierreCaja() {
     didiVal: 0,
     callcenterVal: 0,
     domiciliosPropiosVal: 0,
+  });
+
+  // Valores reales traídos de facturación
+  const [valoresReales, setValoresReales] = useState({
+    tarjetasValReal: 2250000,
+    sodexoValReal: 185000,
+    bigPassValReal: 420000,
+    certValReal: 150000,
   });
 
   const [gastos, setGastos] = useState({
@@ -201,19 +273,17 @@ export default function CierreCaja() {
       }
 
       const data = await response.json();
-      console.log("📦 Datos recibidos:", data);
-      console.log("📦 Tipo de data:", typeof data);
-      console.log("📦 Es array?:", Array.isArray(data));
+
       
-      // La API devuelve { ok: true, data: Array }
+    
       let empleado = null;
       
       // Verificar si tiene la estructura { ok: true, data: [...] }
       if (data && data.ok && data.data) {
-        console.log("🎯 Estructura con 'ok' y 'data' detectada");
+      
         if (Array.isArray(data.data) && data.data.length > 0) {
           empleado = data.data[0];
-          console.log("✅ Tomando primer elemento del array data.data");
+            console.log("✅ Tomando primer elemento del array data.data");
         }
       }
       // Si data es directamente un array
@@ -474,33 +544,53 @@ export default function CierreCaja() {
           </div>
         </div>
 
-      {/* Metrics */}
-      <div className="metrics-grid">
-        <MetricCard label="Total medios de pago (A)" value={fmt(totalA)} variant="info" />
-        <MetricCard label="Total recaudo (B)" value={fmt(totalB)} variant="default" />
-        <MetricCard label="Faltante" value={fmt(faltante)} variant={faltante > 0 ? "danger" : "default"} />
-        <MetricCard label="Sobrante" value={fmt(sobrante)} variant={sobrante > 0 ? "success" : "default"} />
-      </div>
-
       {/* Contenido Principal - 2 Columnas */}
       <div className="content-grid">
         {/* COLUMNA IZQUIERDA */}
         <div className="content-col">
           {/* Tarjetas */}
           <SectionCard icon={CreditCard} title="Tarjetas" color="color-indigo">
-            <div className="field-header">
+            <div className="field-header-extended">
               <span className="field-header-item">Medio</span>
               <span className="field-header-item center">Cant.</span>
-              <span className="field-header-item right">Valor</span>
+              <span className="field-header-item right">Valor Ingresado</span>
+              <span className="field-header-item right">Valor Real</span>
+              <span className="field-header-item right">Diferencia</span>
             </div>
-            <Field label="Tarjetas Débito y Crédito" qty={medios.tarjetasCant} val={fmt(medios.tarjetasVal)} accent
-              onQty={v => setMedios(p => ({ ...p, tarjetasCant: +v }))} onVal={v => setMedios(p => ({ ...p, tarjetasVal: parse(v) }))} />
-            <Field label="Tarjetas Sodexo" qty={medios.sodexoCant} val={fmt(medios.sodexoVal)}
-              onQty={v => setMedios(p => ({ ...p, sodexoCant: +v }))} onVal={v => setMedios(p => ({ ...p, sodexoVal: parse(v) }))} />
-            <Field label="Tarjetas Big Pass" qty={medios.bigPassCant} val={fmt(medios.bigPassVal)}
-              onQty={v => setMedios(p => ({ ...p, bigPassCant: +v }))} onVal={v => setMedios(p => ({ ...p, bigPassVal: parse(v) }))} />
-              <Field label="Certificados de Regalo" qty={medios.certCant} val={fmt(medios.certVal)} accent
-              onQty={v => setMedios(p => ({ ...p, certCant: +v }))} onVal={v => setMedios(p => ({ ...p, certVal: parse(v) }))} />
+            <FieldConDiferencia 
+              label="Tarjetas Débito y Crédito" 
+              qty={medios.tarjetasCant} 
+              val={fmt(medios.tarjetasVal)} 
+              valReal={valoresReales.tarjetasValReal}
+              accent
+              onQty={v => setMedios(p => ({ ...p, tarjetasCant: +v }))} 
+              onVal={v => setMedios(p => ({ ...p, tarjetasVal: parse(v) }))} 
+            />
+            <FieldConDiferencia 
+              label="Tarjetas Sodexo" 
+              qty={medios.sodexoCant} 
+              val={fmt(medios.sodexoVal)}
+              valReal={valoresReales.sodexoValReal}
+              onQty={v => setMedios(p => ({ ...p, sodexoCant: +v }))} 
+              onVal={v => setMedios(p => ({ ...p, sodexoVal: parse(v) }))} 
+            />
+            <FieldConDiferencia 
+              label="Tarjetas Big Pass" 
+              qty={medios.bigPassCant} 
+              val={fmt(medios.bigPassVal)}
+              valReal={valoresReales.bigPassValReal}
+              onQty={v => setMedios(p => ({ ...p, bigPassCant: +v }))} 
+              onVal={v => setMedios(p => ({ ...p, bigPassVal: parse(v) }))} 
+            />
+            <FieldConDiferencia 
+              label="Certificados de Regalo" 
+              qty={medios.certCant} 
+              val={fmt(medios.certVal)}
+              valReal={valoresReales.certValReal}
+              accent
+              onQty={v => setMedios(p => ({ ...p, certCant: +v }))} 
+              onVal={v => setMedios(p => ({ ...p, certVal: parse(v) }))} 
+            />
           </SectionCard>
 
           {/* Vales */}
