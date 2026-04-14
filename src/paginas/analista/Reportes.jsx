@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, DatePicker, Modal, Input, Button, Space, Tag, message, Tooltip } from 'antd';
+import { Table, DatePicker, Modal, Button, Space, Tag, message, Tooltip } from 'antd';
 import { Eye, Edit, CheckCircle, AlertCircle, Calendar, Search } from 'lucide-react';
 import dayjs from 'dayjs';
 import serviciosAutenticacion from '../../api/autenticacion';
@@ -39,9 +39,7 @@ const Reportes = () => {
   const [cargandoCierres, setCargandoCierres] = useState(false);
   const [fechaSeleccionada, setFechaSeleccionada] = useState([dayjs(), dayjs()]);
   const [modalVer, setModalVer] = useState(false);
-  const [modalEditar, setModalEditar] = useState(false);
   const [cierreSeleccionado, setCierreSeleccionado] = useState(null);
-  const [datosEdicion, setDatosEdicion] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -88,14 +86,25 @@ const Reportes = () => {
     
     setCargandoCierres(true);
     try {
+      // Obtener información del PDV seleccionado
+      const pdvInfo = puntosVenta.find(p => p.id === pdvSeleccionado);
+      const codigoPdv = pdvInfo?.id || '';
+      const nombrePdv = pdvInfo?.nombre || '';
+      
       // TODO: Reemplazar con llamada real a la API
+      // La llamada debería ser algo como:
+      // const response = await fetch(`/api/cierres?pdv=${pdvSeleccionado}&fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`);
+      
       // Datos de ejemplo
       const cierresEjemplo = [
         {
           id: 1,
           fecha: '2026-04-13',
           turno: 'Mañana',
+          codigoPdv: codigoPdv,
+          nombrePdv: nombrePdv,
           cajera: 'María González',
+          codigoCajera: 'CAJ001',
           documentoCajera: '1234567890',
           totalVentas: 4350000,
           totalEfectivo: 2150000,
@@ -114,7 +123,10 @@ const Reportes = () => {
           id: 2,
           fecha: '2026-04-13',
           turno: 'Tarde',
+          codigoPdv: codigoPdv,
+          nombrePdv: nombrePdv,
           cajera: 'Laura Pérez',
+          codigoCajera: 'CAJ002',
           documentoCajera: '0987654321',
           totalVentas: 3850000,
           totalEfectivo: 1950000,
@@ -133,7 +145,10 @@ const Reportes = () => {
           id: 3,
           fecha: '2026-04-12',
           turno: 'Mañana',
+          codigoPdv: codigoPdv,
+          nombrePdv: nombrePdv,
           cajera: 'Ana Rodríguez',
+          codigoCajera: 'CAJ003',
           documentoCajera: '1122334455',
           totalVentas: 4120000,
           totalEfectivo: 2020000,
@@ -168,25 +183,8 @@ const Reportes = () => {
   };
 
   const handleEditarCierre = (cierre) => {
-    setCierreSeleccionado(cierre);
-    setDatosEdicion({ ...cierre });
-    setModalEditar(true);
-  };
-
-  const handleGuardarEdicion = async () => {
-    try {
-      // TODO: Llamada a la API para guardar la edición
-      console.log('Guardando edición:', datosEdicion);
-      
-      // Actualizar el cierre en la lista
-      setCierres(cierres.map(c => c.id === datosEdicion.id ? datosEdicion : c));
-      
-      message.success('Cierre actualizado exitosamente');
-      setModalEditar(false);
-    } catch (error) {
-      console.error('Error al guardar:', error);
-      message.error('Error al guardar los cambios');
-    }
+    // Redirigir a la página de edición con todos los detalles
+    navigate('/analista/editar-cierre', { state: { cierre } });
   };
 
   const cerrarSesion = () => {
@@ -211,6 +209,15 @@ const Reportes = () => {
       sorter: (a, b) => dayjs(a.fecha).unix() - dayjs(b.fecha).unix(),
     },
     {
+      title: 'Punto de Venta',
+      dataIndex: 'nombrePdv',
+      key: 'nombrePdv',
+      width: 200,
+      render: (nombre) => (
+        <div style={{ fontWeight: 500 }}>{nombre}</div>
+      ),
+    },
+    {
       title: 'Turno',
       dataIndex: 'turno',
       key: 'turno',
@@ -229,7 +236,7 @@ const Reportes = () => {
       render: (nombre, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>{nombre}</div>
-          <div style={{ fontSize: '12px', color: '#666' }}>CC: {record.documentoCajera}</div>
+          <div style={{ fontSize: '12px', color: '#666' }}>Código: {record.codigoCajera}</div>
         </div>
       ),
     },
@@ -486,78 +493,6 @@ const Reportes = () => {
                   </span>
                 </div>
               ))}
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      {/* Modal Editar */}
-      <Modal
-        title={<div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Edit size={20} />
-          <span>Editar Cierre de Caja</span>
-        </div>}
-        open={modalEditar}
-        onCancel={() => setModalEditar(false)}
-        onOk={handleGuardarEdicion}
-        okText="Guardar Cambios"
-        cancelText="Cancelar"
-        width={700}
-      >
-        {datosEdicion && (
-          <div className="modal-editar-cierre">
-            <div className="editar-grupo">
-              <h3>Información General</h3>
-              <div className="editar-grid">
-                <div className="editar-campo">
-                  <label>Fecha:</label>
-                  <Input 
-                    type="date"
-                    value={datosEdicion.fecha}
-                    onChange={(e) => setDatosEdicion({...datosEdicion, fecha: e.target.value})}
-                  />
-                </div>
-                <div className="editar-campo">
-                  <label>Turno:</label>
-                  <Input 
-                    value={datosEdicion.turno}
-                    onChange={(e) => setDatosEdicion({...datosEdicion, turno: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="editar-grupo">
-              <h3>Valores Financieros</h3>
-              <div className="editar-grid">
-                <div className="editar-campo">
-                  <label>Total Ventas:</label>
-                  <Input 
-                    value={datosEdicion.totalVentas}
-                    onChange={(e) => setDatosEdicion({...datosEdicion, totalVentas: Number(e.target.value)})}
-                    type="number"
-                    prefix="$"
-                  />
-                </div>
-                <div className="editar-campo">
-                  <label>Total Efectivo:</label>
-                  <Input 
-                    value={datosEdicion.totalEfectivo}
-                    onChange={(e) => setDatosEdicion({...datosEdicion, totalEfectivo: Number(e.target.value)})}
-                    type="number"
-                    prefix="$"
-                  />
-                </div>
-                <div className="editar-campo">
-                  <label>Total Tarjetas:</label>
-                  <Input 
-                    value={datosEdicion.totalTarjetas}
-                    onChange={(e) => setDatosEdicion({...datosEdicion, totalTarjetas: Number(e.target.value)})}
-                    type="number"
-                    prefix="$"
-                  />
-                </div>
-              </div>
             </div>
           </div>
         )}

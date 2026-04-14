@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import InicioSesion from './paginas/autenticacion/InicioSesion';
 import Reportes from './paginas/analista/Reportes';
+import EditarCierre from './paginas/analista/EditarCierre';
 import CuadreCaja from './paginas/cajera/CuadreCaja';
 import CierreCaja from './paginas/cajera/CierreCaja';
 import './App.css';
@@ -11,6 +12,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<InicioSesion />} />
         <Route path="/analista" element={<Reportes />} />
+        <Route path="/analista/editar-cierre" element={<EditarCierre />} />
         <Route path="/cajera" element={<CuadreCaja />} />
         <Route path="/cierre-caja" element={<CierreCaja />} />
         <Route path="/" element={<Navigate to="/login" replace />} />

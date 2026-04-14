@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   CreditCard, DollarSign, Package, AlertTriangle, CheckCircle2,
   Printer, LogOut, RefreshCw, Save, TrendingDown,
   TrendingUp, Banknote, Receipt, Users, ShieldCheck, Eye, ArrowLeft, Plus, X, Search, Trash2, ChevronDown
 } from "lucide-react";
-import { getSession, clearSession } from "../../utils/sessionFlow";
-import "./CierreCaja.css";
+import { message } from 'antd';
+import "../cajera/CierreCaja.css";
 
 const fmt = (n) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n || 0);
@@ -146,40 +146,43 @@ const MetricCard = ({ label, value, sub, trend, variant }) => (
   </div>
 );
 
-export default function CierreCaja() {
+export default function EditarCierre() {
   const navigate = useNavigate();
-  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
+  const location = useLocation();
+  const cierreData = location.state?.cierre;
+
+  const [fecha, setFecha] = useState(cierreData?.fecha || new Date().toISOString().split('T')[0]);
   const [guardado, setGuardado] = useState(false);
   const [datafono, setDatafono] = useState("si");
-  const [empleadoData, setEmpleadoData] = useState(null);
-
-  useEffect(() => {
-    const session = getSession();
-    if (!session || !session.datosEmpleado) {
-      navigate('/login', { replace: true });
-      return;
-    }
-    setEmpleadoData(session.datosEmpleado);
-    console.log(" Datos del empleado en cierre:", session.datosEmpleado);
-  }, [navigate]);
+  const [empleadoData, setEmpleadoData] = useState({
+    nombre: cierreData?.cajera || "Cajera",
+    documento: cierreData?.documentoCajera || "N/A"
+  });
 
   const [medios, setMedios] = useState({
-    tarjetasCant: 0, tarjetasVal: 0,
-    sodexoCant: 0, sodexoVal: 0,
-    bigPassCant: 0, bigPassVal: 0,
-    certCant: 0, certVal: 0,
-    bonusCant: 0, bonusVal: 0,
-    valesSodexoCant: 0, valesSodexoVal: 0,
-    valesBigCant: 0, valesBigVal: 0,
-    rappiVal: 0, 
-    didiVal: 0,
+    tarjetasCant: cierreData?.mediosPago?.tarjetas?.cantidad || 0,
+    tarjetasVal: cierreData?.mediosPago?.tarjetas?.valor || 0,
+    sodexoCant: cierreData?.mediosPago?.sodexo?.cantidad || 0,
+    sodexoVal: cierreData?.mediosPago?.sodexo?.valor || 0,
+    bigPassCant: cierreData?.mediosPago?.bigPass?.cantidad || 0,
+    bigPassVal: cierreData?.mediosPago?.bigPass?.valor || 0,
+    certCant: 0,
+    certVal: 0,
+    bonusCant: 0,
+    bonusVal: 0,
+    valesSodexoCant: 0,
+    valesSodexoVal: 0,
+    valesBigCant: 0,
+    valesBigVal: 0,
+    rappiVal: cierreData?.mediosPago?.rappi?.valor || 0,
+    didiVal: cierreData?.mediosPago?.didi?.valor || 0,
     callcenterVal: 0,
     domiciliosPropiosVal: 0,
   });
 
   // Valores reales traídos de facturación
   const [valoresReales, setValoresReales] = useState({
-    tarjetasValReal: 2250000,
+    tarjetasValReal: cierreData?.totalTarjetas || 2250000,
     sodexoValReal: 185000,
     bigPassValReal: 420000,
     certValReal: 150000,
@@ -206,7 +209,7 @@ export default function CierreCaja() {
   const [regalo, setRegalo] = useState(0);
   const [factManual, setFactManual] = useState(0);
   const [totalfacturas, setTotalFacturas] = useState({ cant: 0, val: 0 });
-  const [venta, setVenta] = useState(0);
+  const [venta, setVenta] = useState(cierreData?.totalVentas || 0);
   const [facturasanuladas, setFacturasAnuladas] = useState({ cant: 0, val: 0 });
   const [propinasFact, setPropinasFact] = useState(0);
 
@@ -215,7 +218,7 @@ export default function CierreCaja() {
     facturacion: 0, factAlm: 0, descuento: 0,
   });
 
-  const [ventas, setVentas] = useState(0);
+  const [ventas, setVentas] = useState(cierreData?.totalVentas || 0);
   const [efTransp, setEfTransp] = useState(0);
   const [obs, setObs] = useState("");
   
@@ -248,6 +251,13 @@ export default function CierreCaja() {
   const [ventasProductos, setVentasProductos] = useState([]);
   const [errorVentaProducto, setErrorVentaProducto] = useState("");
 
+  useEffect(() => {
+    if (!cierreData) {
+      message.warning('No se encontró información del cierre a editar');
+      navigate('/analista');
+    }
+  }, [cierreData, navigate]);
+
   const totalA = Object.entries(medios).reduce((s, [k, v]) => k.endsWith("Val") ? s + v : s, 0)
     + Object.entries(gastos).reduce((s, [k, v]) => k.endsWith("Val") ? s + v : s, 0)
     + Object.entries(otros).reduce((s, [k, v]) => k.endsWith("Val") ? s + v : s, 0);
@@ -259,21 +269,46 @@ export default function CierreCaja() {
   const faltante = diferencia < 0 ? Math.abs(diferencia) : 0;
   const sobrante = diferencia >= 0 ? diferencia : 0;
 
-  const handleGuardar = () => { 
-    setGuardado(true); 
-    setTimeout(() => setGuardado(false), 2500); 
-    console.log("💾 Guardando cierre de caja...");
-  };
-
-  const handleSalir = () => {
-    if (window.confirm("¿Estás seguro de que deseas salir?")) {
-      clearSession();
-      navigate('/login', { replace: true });
+  const handleGuardar = async () => {
+    try {
+      // TODO: Implementar guardado en API
+      console.log("💾 Guardando edición de cierre...", {
+        id: cierreData.id,
+        fecha,
+        medios,
+        gastos,
+        otros,
+        sellos,
+        reembolsos,
+        propinas,
+        ventas,
+        efTransp,
+        obs,
+        datafono
+      });
+      
+      setGuardado(true);
+      message.success('Cierre actualizado exitosamente');
+      
+      setTimeout(() => {
+        navigate('/analista');
+      }, 1500);
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      message.error('Error al guardar los cambios');
     }
   };
 
   const handleVolver = () => {
-    navigate('/cajera');
+    navigate('/analista');
+  };
+
+  const cerrarModal = () => {
+    setModalMeseras(false);
+    setDocumentoBuscar("");
+    setMeseraEncontrada(null);
+    setErrorBusqueda("");
+    setMontoMesera("");
   };
 
   const buscarMesera = async () => {
@@ -288,87 +323,56 @@ export default function CierreCaja() {
 
     try {
       const url = `https://apialohav2.crepesywaffles.com/buk/empleados3?documento=${documentoBuscar}`;
-      console.log("🔍 Buscando en:", url);
-      
       const response = await fetch(url);
-      console.log("📡 Response status:", response.status);
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ Error response:", errorText);
         throw new Error(`No se encontró el empleado`);
       }
 
       const data = await response.json();
-
-      
-    
       let empleado = null;
       
-      // Verificar si tiene la estructura { ok: true, data: [...] }
       if (data && data.ok && data.data) {
-      
         if (Array.isArray(data.data) && data.data.length > 0) {
           empleado = data.data[0];
-            console.log("✅ Tomando primer elemento del array data.data");
         }
-      }
-      // Si data es directamente un array
-      else if (Array.isArray(data) && data.length > 0) {
+      } else if (Array.isArray(data) && data.length > 0) {
         empleado = data[0];
-        console.log("✅ Tomando primer elemento del array directo");
-      }
-      // Si data es un objeto con propiedades numéricas
-      else if (data && typeof data === 'object' && !Array.isArray(data)) {
+      } else if (data && typeof data === 'object' && !Array.isArray(data)) {
         const keys = Object.keys(data);
-        console.log("🔑 Keys encontradas:", keys);
-        
         if (keys.length > 0 && !isNaN(keys[0])) {
           empleado = data[keys[0]];
-          console.log("🎯 Tomando primer elemento con key numérica:", keys[0]);
         }
       }
-      
-      if (empleado) {
-        // Validar que el empleado esté activo
-        const status = empleado.status || empleado.estado;
-        if (status && status.toLowerCase() === 'inactivo') {
-          setErrorBusqueda("Empleado inactivo, ingrese otro");
-          return;
-        }
 
-        const meseraData = {
-          documento: empleado.document_number || empleado.rut || empleado.documento || documentoBuscar,
-          nombre: empleado.nombre || empleado.full_name || "Sin nombre",
-          foto: empleado.foto || empleado.photo_url || null,
-          cargo: empleado.cargo || empleado.cargo_area || empleado.cargoGeneral || null,
-          area: empleado.area_nombre || empleado.departamento || empleado.pdv || null
-        };
-        
-
-        setMeseraEncontrada(meseraData);
-      } else {
-        console.warn("⚠️ No se encontraron datos");
-        setErrorBusqueda("No se encontró empleado con ese documento");
+      if (!empleado) {
+        throw new Error('No se encontró el empleado');
       }
+
+      const meseraData = {
+        nombre: empleado.full_name || empleado.nombre || 'Desconocido',
+        documento: empleado.document_number || empleado.documento || documentoBuscar,
+        foto: empleado.photo_url || empleado.foto || null,
+        cargo: empleado.cargo_nombre || empleado.cargo || null,
+        area: empleado.area_nombre || empleado.area || null,
+      };
+
+      setMeseraEncontrada(meseraData);
     } catch (error) {
-      console.error("💥 Error buscando mesera:", error);
-      setErrorBusqueda(`Error: ${error.message}`);
+      setErrorBusqueda(error.message);
     } finally {
       setBuscando(false);
     }
   };
 
   const agregarMesera = () => {
-    if (!meseraEncontrada || !montoMesera.trim()) {
-      setErrorBusqueda("Debes buscar una mesera e ingresar el monto a descontar");
+    if (!montoMesera || parse(montoMesera) <= 0) {
+      setErrorBusqueda("Ingresa un monto válido a descontar");
       return;
     }
 
-    // Verificar si ya está agregada
-    const yaExiste = meseras.some(m => m.documento === meseraEncontrada.documento);
-    if (yaExiste) {
-      setErrorBusqueda("Esta mesera ya fue agregada");
+    if (meseras.some(m => m.documento === meseraEncontrada.documento)) {
+      setErrorBusqueda("Esta mesera ya está en la lista");
       return;
     }
 
@@ -379,13 +383,12 @@ export default function CierreCaja() {
 
     const nuevasMeseras = [...meseras, nuevaMesera];
     setMeseras(nuevasMeseras);
-    
-    // Calcular total de descuentos
-    const totalDescuentos = nuevasMeseras.reduce((sum, m) => sum + m.monto, 0);
-    setPropinas(p => ({ ...p, descuento: totalDescuentos }));
-    
-    setDocumentoBuscar("");
+
+    const totalDescuento = nuevasMeseras.reduce((sum, m) => sum + m.monto, 0);
+    setPropinas(p => ({ ...p, descuento: totalDescuento }));
+
     setMeseraEncontrada(null);
+    setDocumentoBuscar("");
     setMontoMesera("");
     setErrorBusqueda("");
   };
@@ -393,32 +396,34 @@ export default function CierreCaja() {
   const eliminarMesera = (documento) => {
     const nuevasMeseras = meseras.filter(m => m.documento !== documento);
     setMeseras(nuevasMeseras);
-    
-    // Recalcular total de descuentos
-    const totalDescuentos = nuevasMeseras.reduce((sum, m) => sum + m.monto, 0);
-    setPropinas(p => ({ ...p, descuento: totalDescuentos }));
+
+    const totalDescuento = nuevasMeseras.reduce((sum, m) => sum + m.monto, 0);
+    setPropinas(p => ({ ...p, descuento: totalDescuento }));
   };
 
-  const cerrarModal = () => {
-    setModalMeseras(false);
-    setDocumentoBuscar("");
-    setMeseraEncontrada(null);
-    setMontoMesera("");
-    setErrorBusqueda("");
+  const cerrarModalResponsable = () => {
+    setModalResponsable(false);
+    setNumeroSello("");
+    setValorSello("");
   };
 
-  // Funciones para responsables (sellos)
   const agregarSello = () => {
-    if (!valorSello.trim() || !numeroSello.trim()) {
+    if (!numeroSello.trim()) {
+      message.warning("Ingresa el número de sello");
+      return;
+    }
+
+    if (!valorSello || parse(valorSello) <= 0) {
+      message.warning("Ingresa un valor válido para el sello");
       return;
     }
 
     const nuevoSello = {
       numero: numeroSello,
-      documento: empleadoData.documento || empleadoData.document_number,
-      responsable: empleadoData.nombre || empleadoData.full_name,
-      foto: empleadoData.foto || empleadoData.photo_url || null,
-      val: parse(valorSello)
+      val: parse(valorSello),
+      responsable: empleadoData?.nombre || empleadoData?.full_name || "Usuario",
+      documento: empleadoData?.documento || empleadoData?.document_number || "N/A",
+      foto: empleadoData?.foto || empleadoData?.photo_url || null
     };
 
     setSellos([...sellos, nuevoSello]);
@@ -431,13 +436,6 @@ export default function CierreCaja() {
     setSellos(sellos.filter((_, i) => i !== index));
   };
 
-  const cerrarModalResponsable = () => {
-    setModalResponsable(false);
-    setNumeroSello("");
-    setValorSello("");
-  };
-
-  // Funciones para venta producto
   const buscarEmpleadoVentaProducto = async () => {
     if (!documentoVentaProducto.trim()) {
       setErrorVentaProducto("Ingresa un número de documento");
@@ -457,51 +455,54 @@ export default function CierreCaja() {
       }
 
       const data = await response.json();
-      
       let empleado = null;
+      
       if (data && data.ok && data.data) {
         if (Array.isArray(data.data) && data.data.length > 0) {
           empleado = data.data[0];
         }
       } else if (Array.isArray(data) && data.length > 0) {
         empleado = data[0];
-      }
-      
-      if (empleado) {
-        // Validar que el empleado esté activo
-        const status = empleado.status || empleado.estado;
-        if (status && status.toLowerCase() === 'inactivo') {
-          setErrorVentaProducto("Empleado inactivo, ingrese otro");
-          return;
+      } else if (data && typeof data === 'object' && !Array.isArray(data)) {
+        const keys = Object.keys(data);
+        if (keys.length > 0 && !isNaN(keys[0])) {
+          empleado = data[keys[0]];
         }
-
-        setEmpleadoVentaProducto({
-          documento: empleado.document_number || empleado.documento || documentoVentaProducto,
-          nombre: empleado.nombre || empleado.full_name || "Sin nombre",
-          foto: empleado.foto || empleado.photo_url || null,
-          cargo: empleado.cargo || null,
-          area: empleado.area_nombre || empleado.departamento || null
-        });
-      } else {
-        setErrorVentaProducto("No se encontró empleado con ese documento");
       }
+
+      if (!empleado) {
+        throw new Error('No se encontró el empleado');
+      }
+
+      const empleadoData = {
+        nombre: empleado.full_name || empleado.nombre || 'Desconocido',
+        documento: empleado.document_number || empleado.documento || documentoVentaProducto,
+        foto: empleado.photo_url || empleado.foto || null,
+        cargo: empleado.cargo_nombre || empleado.cargo || null,
+        area: empleado.area_nombre || empleado.area || null,
+      };
+
+      setEmpleadoVentaProducto(empleadoData);
     } catch (error) {
-      setErrorVentaProducto(`Error: ${error.message}`);
+      setErrorVentaProducto(error.message);
     } finally {
       setBuscandoEmpleadoVenta(false);
     }
   };
 
   const agregarVentaProducto = () => {
-    if (!empleadoVentaProducto || !conceptoVentaProducto.trim() || !valorVentaProducto.trim()) {
-      setErrorVentaProducto("Debes buscar un empleado, ingresar concepto y valor");
+    if (!conceptoVentaProducto.trim()) {
+      setErrorVentaProducto("Ingresa el concepto de la venta");
+      return;
+    }
+
+    if (!valorVentaProducto || parse(valorVentaProducto) <= 0) {
+      setErrorVentaProducto("Ingresa un valor válido");
       return;
     }
 
     const nuevaVenta = {
-      documento: empleadoVentaProducto.documento,
-      nombre: empleadoVentaProducto.nombre,
-      foto: empleadoVentaProducto.foto,
+      ...empleadoVentaProducto,
       concepto: conceptoVentaProducto,
       valor: parse(valorVentaProducto)
     };
@@ -509,13 +510,12 @@ export default function CierreCaja() {
     const nuevasVentas = [...ventasProductos, nuevaVenta];
     setVentasProductos(nuevasVentas);
     
-    // Calcular total de ventas
     const totalCantidad = nuevasVentas.length;
     const totalValor = nuevasVentas.reduce((sum, v) => sum + v.valor, 0);
     setOtros(p => ({ ...p, respCant: totalCantidad, respVal: totalValor }));
-    
-    setDocumentoVentaProducto("");
+
     setEmpleadoVentaProducto(null);
+    setDocumentoVentaProducto("");
     setConceptoVentaProducto("");
     setValorVentaProducto("");
     setErrorVentaProducto("");
@@ -525,7 +525,6 @@ export default function CierreCaja() {
     const nuevasVentas = ventasProductos.filter((_, i) => i !== index);
     setVentasProductos(nuevasVentas);
     
-    // Recalcular total de ventas
     const totalCantidad = nuevasVentas.length;
     const totalValor = nuevasVentas.reduce((sum, v) => sum + v.valor, 0);
     setOtros(p => ({ ...p, respCant: totalCantidad, respVal: totalValor }));
@@ -540,7 +539,7 @@ export default function CierreCaja() {
     setErrorVentaProducto("");
   };
 
-  if (!empleadoData) {
+  if (!cierreData) {
     return <div className="loading">Cargando...</div>;
   }
 
@@ -559,7 +558,7 @@ export default function CierreCaja() {
                 <Receipt size={18} className="logo-icon" />
               </div>
               <div>
-                <div className="header-title">Cierre de Caja</div>
+                <div className="header-title">Editar Cierre de Caja</div>
                 <div className="header-subtitle">
                   {empleadoData?.nombre || "Usuario"} · Cédula: {empleadoData?.documento || "N/A"}
                 </div>
@@ -576,8 +575,8 @@ export default function CierreCaja() {
             <button className="btn-secondary">
               <Printer size={14} /> Imprimir
             </button>
-            <button className="btn-danger" onClick={handleSalir}>
-              <LogOut size={14} /> Salir
+            <button className="btn-danger" onClick={handleVolver}>
+              <LogOut size={14} /> Cancelar
             </button>
           </div>
         </div>
@@ -839,9 +838,6 @@ export default function CierreCaja() {
               <span className="total-recaudo-label">Total recaudo (B)</span>
               <span className="total-recaudo-value">{fmt(totalB)}</span>
             </div>
-            <div className="consecutivo-box">
-              Consecutivo: [S2763826]
-            </div>
           </SectionCard>
         </div>
 
@@ -1089,7 +1085,7 @@ export default function CierreCaja() {
                 </>
               ) : (
                 <>
-                  <Save size={16} /> Guardar cierre
+                  <Save size={16} /> Guardar cambios
                 </>
               )}
             </button>
