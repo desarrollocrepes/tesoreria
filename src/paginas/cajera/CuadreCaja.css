@@ -23,7 +23,7 @@
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #E8E3DC;
   width: 100%;
   box-sizing: border-box;
 }
@@ -37,7 +37,7 @@
 .avatar-usuario {
   width: 48px;
   height: 48px;
-  background: #f3f4f6;
+  background: #FAF6F0;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -45,7 +45,7 @@
   font-size: 20px;
   font-weight: 600;
   color: #6b7280;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #E8E3DC;
   overflow: hidden;
   position: relative;
 }
@@ -79,7 +79,7 @@
 .boton-cerrar-sesion {
   background: white;
   color: #374151;
-  border: 1px solid #d1d5db;
+  border: 1px solid #D9D3CC;
   padding: 8px 16px;
   border-radius: 6px;
   font-size: 14px;
@@ -89,7 +89,7 @@
 }
 
 .boton-cerrar-sesion:hover {
-  background: #f9fafb;
+  background: #FCF9F5;
   border-color: #9ca3af;
 }
 
@@ -113,7 +113,7 @@
   background: white;
   padding: 20px 24px;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E8E3DC;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -123,7 +123,7 @@
 .icono-pdv {
   width: 48px;
   height: 48px;
-  background: #f3f4f6;
+  background: #FAF6F0;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -248,7 +248,7 @@
   background: white;
   padding: 32px;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E8E3DC;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
@@ -294,14 +294,14 @@
 .input-cierre {
   width: 100%;
   padding: 14px 16px 14px 36px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #E8E3DC;
   border-radius: 8px;
   font-size: 16px;
   font-weight: 500;
   color: #111827;
   transition: all 0.2s ease;
   box-sizing: border-box;
-  background: #fafafa;
+  background: #FCF9F5;
 }
 
 .input-cierre:focus {
@@ -323,7 +323,7 @@
 .textarea-observaciones {
   width: 100%;
   padding: 14px 16px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #E8E3DC;
   border-radius: 8px;
   font-size: 14px;
   color: #111827;
@@ -331,7 +331,7 @@
   resize: vertical;
   transition: all 0.2s ease;
   box-sizing: border-box;
-  background: #fafafa;
+  background: #FCF9F5;
   margin-top: 8px;
 }
 
@@ -348,14 +348,14 @@
 
 /* Resumen Total */
 .resumen-total {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, rgba(174, 206, 130, 0.45) 0%, rgba(157, 190, 111, 0.42) 100%);
   padding: 24px 32px;
   border-radius: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25);
+  box-shadow: 0 4px 6px rgba(174, 206, 130, 0.25);
 }
 
 .label-total {

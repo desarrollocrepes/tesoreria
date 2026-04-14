@@ -11,6 +11,25 @@ const { RangePicker } = DatePicker;
 const fmt = (n) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n || 0);
 
+// Componente para tarjetas de métricas
+const MetricCard = ({ label, value, variant = 'default' }) => {
+  const getVariantClass = () => {
+    switch (variant) {
+      case 'info': return 'metric-card-info';
+      case 'success': return 'metric-card-success';
+      case 'danger': return 'metric-card-danger';
+      default: return 'metric-card-default';
+    }
+  };
+
+  return (
+    <div className={`metric-card ${getVariantClass()}`}>
+      <div className="metric-label">{label}</div>
+      <div className="metric-value">{value}</div>
+    </div>
+  );
+};
+
 const Reportes = () => {
   const [usuario, setUsuario] = useState(null);
   const [puntosVenta, setPuntosVenta] = useState([]);
@@ -287,6 +306,13 @@ const Reportes = () => {
       ),
     },
   ];
+
+  // Calcular métricas a partir de los cierres cargados
+  const totalA = cierres.reduce((sum, cierre) => sum + (cierre.totalVentas || 0), 0);
+  const totalB = cierres.reduce((sum, cierre) => sum + ((cierre.totalEfectivo || 0) + (cierre.totalTarjetas || 0)), 0);
+  const diferencias = cierres.map(c => c.diferencia || 0);
+  const faltante = diferencias.filter(d => d < 0).reduce((sum, d) => sum + Math.abs(d), 0);
+  const sobrante = diferencias.filter(d => d > 0).reduce((sum, d) => sum + d, 0);
 
   if (!usuario) {
     return <div className="loading-container">Cargando...</div>;

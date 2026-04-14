@@ -303,6 +303,13 @@ export default function CierreCaja() {
       }
       
       if (empleado) {
+        // Validar que el empleado esté activo
+        const status = empleado.status || empleado.estado;
+        if (status && status.toLowerCase() === 'inactivo') {
+          setErrorBusqueda("Empleado inactivo, ingrese otro");
+          return;
+        }
+
         const meseraData = {
           documento: empleado.document_number || empleado.rut || empleado.documento || documentoBuscar,
           nombre: empleado.nombre || empleado.full_name || "Sin nombre",
@@ -434,6 +441,13 @@ export default function CierreCaja() {
       }
       
       if (empleado) {
+        // Validar que el empleado esté activo
+        const status = empleado.status || empleado.estado;
+        if (status && status.toLowerCase() === 'inactivo') {
+          setErrorVentaProducto("Empleado inactivo, ingrese otro");
+          return;
+        }
+
         setEmpleadoVentaProducto({
           documento: empleado.document_number || empleado.documento || documentoVentaProducto,
           nombre: empleado.nombre || empleado.full_name || "Sin nombre",
